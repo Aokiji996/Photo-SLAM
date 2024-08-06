@@ -17,6 +17,8 @@ set(CAFFE2_USE_CUDNN on)
 # Uncomment the following line if you want to solve CMake Warning "Failed to compute shorthash for libnvrtc.so"
 # set(PYTHON_EXECUTABLE "/usr/bin/python3")
 
+set(Torch_DIR "~/hjw/Project/Photo-SLAM/third_party/libtorch/share/cmake/Torch")
+set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=1")
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -pthread")
 
@@ -25,6 +27,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -pthread")
 
 find_package(CUDA REQUIRED)
 find_package(Eigen3 REQUIRED)
+set(OpenCV_DIR "~/hjw/Thirdparty/opencv-4.10.0/install/lib/cmake/opencv4")
 find_package(OpenCV 4 REQUIRED)
 find_package(jsoncpp REQUIRED)
 
@@ -45,7 +48,8 @@ include_directories(
     ${ORB_SLAM3_SOURCE_DIR}/include/CameraModels
     ${ORB_SLAM3_SOURCE_DIR}/Thirdparty/Sophus
     ${EIGEN3_INCLUDE_DIR}
-    ${OPENGL_INCLUDE_DIR})
+    ${OPENGL_INCLUDE_DIR}
+)
 
 ##################################################################################
 ##  Build the gaussian splatting component libraries to ${PROJECT_SOURCE_DIR}/lib
@@ -77,13 +81,13 @@ add_library(cuda_rasterizer SHARED
     cuda_rasterizer/rasterizer_impl.cu
     cuda_rasterizer/rasterizer_impl.h
     cuda_rasterizer/stereo_vision.h)
-set_target_properties(cuda_rasterizer PROPERTIES CUDA_ARCHITECTURES "75;86")
+set_target_properties(cuda_rasterizer PROPERTIES CUDA_ARCHITECTURES "75;86;89")
 # target_compile_features(cuda_rasterizer PUBLIC cxx_std_17)
 target_include_directories(cuda_rasterizer PRIVATE
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 target_link_libraries(cuda_rasterizer
     glm::glm
-    "${TORCH_LIBRARIES}"
+    ${TORCH_LIBRARIES}
     Eigen3::Eigen)
 
 ##################################################################################
@@ -142,14 +146,17 @@ add_library(gaussian_mapper SHARED
     src/gaussian_scene.cpp
     src/gaussian_trainer.cpp
     src/gaussian_mapper.cpp)
+
 target_link_libraries(gaussian_mapper
     ${ORB_SLAM3_SOURCE_DIR}/lib/libORB_SLAM3.so
     ${OpenCV_LIBRARIES}
     jsoncpp_lib
-    "${TORCH_LIBRARIES}"
+    ${TORCH_LIBRARIES}
     Eigen3::Eigen
     simple_knn
-    cuda_rasterizer)
+    cuda_rasterizer
+)
+
 
 ##################################################################################
 ##  Build the viewer library to ${PROJECT_SOURCE_DIR}/lib
@@ -160,17 +167,20 @@ add_library(gaussian_viewer SHARED
     viewer/imgui_viewer.cpp
     viewer/imgui_viewer.h
     viewer/map_drawer.cpp
-    viewer/map_drawer.h)
+    viewer/map_drawer.h
+)
+
 target_link_libraries(gaussian_viewer
     ${ORB_SLAM3_SOURCE_DIR}/lib/libORB_SLAM3.so
     gaussian_mapper
     imgui
     ${OpenCV_LIBRARIES}
     jsoncpp_lib
-    "${TORCH_LIBRARIES}"
+    ${TORCH_LIBRARIES}
     glm::glm
     glfw
-    OpenGL::GL)
+    OpenGL::GL
+)
 
 ##################################################################################
 ##  Build the test examples to ${PROJECT_SOURCE_DIR}/bin
@@ -197,6 +207,13 @@ target_link_libraries(replica_mono
     gaussian_viewer    
     gaussian_mapper
     ${ORB_SLAM3_SOURCE_DIR}/lib/libORB_SLAM3.so)
+
+# Scannet Monocular
+add_executable(scannet_mono examples/scannet_mono.cpp)
+target_link_libraries(scannet_mono
+        gaussian_viewer
+        gaussian_mapper
+        ${ORB_SLAM3_SOURCE_DIR}/lib/libORB_SLAM3.so)
 
 # Replica Monocular
 add_executable(replica_rgbd examples/replica_rgbd.cpp)

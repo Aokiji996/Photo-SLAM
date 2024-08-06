@@ -31,7 +31,8 @@ endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
-find_package(OpenCV 4.4)
+set(OpenCV_DIR "~/hjw/Thirdparty/opencv-4.10.0/install/lib/cmake/opencv4")
+find_package(OpenCV)
    if(NOT OpenCV_FOUND)
       message(FATAL_ERROR "OpenCV > 4.4 not found.")
    endif()

@@ -35,12 +35,15 @@
 /build/
 /bin/
 /lib/
+./cmake-build-release
+./cmake-build-debug
 
 # VS Code
 /.vscode/
-
+./.idea
 # results
 /results/
 
 # ImGui .ini
 *imgui.ini
+./third_party/libtorch
